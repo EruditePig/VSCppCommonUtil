@@ -424,6 +424,7 @@ BOOL sjx::IsOSVistaOrGreater()
 	return FALSE;
 }
 
+// 获得exe所在的文件夹，以\结尾
 CString sjx::GetModuleFolder()
 {
 	TCHAR FilePath[MAX_PATH + 1] = { 0 };
