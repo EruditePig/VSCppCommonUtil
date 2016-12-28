@@ -551,3 +551,60 @@ void sjx::UnicodeToUTF8(CStringW uni, std::vector<char>& utf8)
 
 	::WideCharToMultiByte(CP_UTF8, 0, uni, -1, utf8.data(), len, NULL, NULL);
 }
+
+// 运行exe
+void sjx::RunExeAndWait(CString csExePath)
+{
+	SHELLEXECUTEINFO  ShExecInfo = { 0 };
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = csExePath;
+	ShExecInfo.lpParameters = NULL;
+	ShExecInfo.lpDirectory = NULL;
+	ShExecInfo.nShow = SW_SHOW;
+	ShExecInfo.hInstApp = NULL;
+	ShellExecuteEx(&ShExecInfo);
+	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
+}
+
+
+// 调用命令提示符执行命令，并获得输出
+BOOL sjx::ExecCmd(CString cmd, CString& csRet)
+{
+	USES_CONVERSION;
+	char* pCmd = T2A(cmd);
+	std::shared_ptr<FILE> pipe(_popen(pCmd, "r"), _pclose);
+	if (!pipe)
+	{
+		csRet = _T("创建管道失败，无法执行命令");
+		return FALSE;
+	}
+	char buffer[128];
+	while (!feof(pipe.get()))
+	{
+		if (fgets(buffer, 128, pipe.get()) != NULL)
+			csRet += buffer;
+	}
+	return TRUE;
+}
+
+// 分割CString
+void sjx::SplitCString(CString str, CString split, CStringArray& strGet)
+{
+	//str为待分割的CString，split为分割符如：， |或空格 strGet为输出参数，你得到的字符串存放在strGet中
+	int pos = -1;
+	pos = str.Find(split);
+	while (pos != -1)
+	{
+		strGet.Add(str.Left(pos));
+		str.Delete(0, pos+1);
+		pos = str.Find(split);
+	}
+	if (str != "")
+	{//最后剩下的字符串可能没有split这个标示，看你需要怎么处理了
+	 //这里也把他加入到strGet中
+		strGet.Add(str);
+	}
+}

@@ -57,6 +57,12 @@ namespace sjx
 	bool IsUTF8(const void* pBuffer, long size);
 	// Unicode转UTF-8
 	void UnicodeToUTF8(CStringW uni, std::vector<char>& utf8);
+	// 运行exe
+	void RunExeAndWait(CString csExePath);
+    // 调用命令提示符执行命令，并获得输出
+    BOOL ExecCmd(CString cmd, CString& csRet);
+    // 分割CString
+    void SplitCString(CString str, CString split, CStringArray& strGet);
 }
 
 #pragma region 计算MD5用
