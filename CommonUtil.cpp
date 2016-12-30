@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "CommonUtil.h"
 #include <io.h>
+#include <memory>
 
 BOOL sjx::GenFileMD5(CString filepath, CString& md5)
 {
