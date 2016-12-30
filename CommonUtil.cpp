@@ -46,6 +46,15 @@ int sjx::CompareFileByMD5(CString file1, CString file2)
 	}
 }
 
+// 检测MD5值的正确性
+BOOL sjx::IsValidMD5(CString csMD5)
+{
+	if (csMD5.GetLength() != 32) return FALSE;
+
+	csMD5 = csMD5.MakeLower();
+	CString csTemp = csMD5.SpanIncluding(_T("1234567890abcedf"));
+	return csTemp == csMD5;
+}
 
 // 比较两个文件的时间。返回值 0-相同，-1-file1生成MD5失败 -2-file2生成MD5失败 -3 -file1比file2早 -4 file1比file2晚
 int sjx::CompareFileByModTime(CString file1, CString file2)
@@ -600,7 +609,7 @@ void sjx::SplitCString(CString str, CString split, CStringArray& strGet)
 	while (pos != -1)
 	{
 		strGet.Add(str.Left(pos));
-		str.Delete(0, pos+1);
+		str.Delete(0, pos + split.GetLength());
 		pos = str.Find(split);
 	}
 	if (str != "")
@@ -608,4 +617,133 @@ void sjx::SplitCString(CString str, CString split, CStringArray& strGet)
 	 //这里也把他加入到strGet中
 		strGet.Add(str);
 	}
+}
+
+// 打开文件，为读写扩展ini 0读1写
+CStdioFile* sjx::OpenExIniFile(CString csPath, int readOrWrite)
+{
+	if (readOrWrite == 0)
+	{
+		CStdioFile* pFile = new CStdioFile();
+		if (pFile)
+		{
+			BOOL bRet = pFile->Open(csPath, CFile::modeRead);
+			if (!bRet)
+			{
+				delete pFile;
+				return nullptr;
+			}
+			else
+			{
+				return pFile;
+			}
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+	else if(readOrWrite == 1)
+	{
+		CStdioFile* pFile = new CStdioFile();
+		if (pFile)
+		{
+			CFileException error;
+			BOOL bRet = pFile->Open(csPath, CFile::modeWrite | CFile::modeCreate, &error);
+			if (!bRet)
+			{
+				delete pFile;
+				return nullptr;
+			}
+			else
+			{
+				return pFile;
+			}
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+// 读某个字段的结果
+void sjx::ReadExIniSection(CStdioFile* pFile, CString csSecName, CString& csSecValue)
+{
+	auto IsAttrLine = [](CString csLine) -> BOOL
+	{
+		csLine = csLine.TrimLeft();
+		csLine = csLine.TrimRight();
+		return csLine.Left(1) == _T("[") && csLine.Right(1) == _T("]");
+	};
+	auto IsCommentLine = [](CString csLine)	-> BOOL
+	{
+		return csLine.Find(_T("//")) == 0;
+	};
+	auto IsBlankLine = [](CString csLine) -> BOOL
+	{
+		for (int i = 0; i < csLine.GetLength(); ++i)
+		{
+			if (csLine[i] != _T(' ') && csLine[i] != _T('\t'))
+			{
+				return FALSE;
+			}
+		}
+		return TRUE;
+	};
+
+	auto SeekAttr = [](CStdioFile& file, CString csAttrName) -> BOOL
+	{
+		file.Seek(0, CFile::begin);
+		CString csLine;
+		while (file.ReadString(csLine))
+		{
+			csLine = csLine.TrimLeft();
+			csLine = csLine.TrimRight();
+			if (csLine == _T("[") + csAttrName + _T("]"))
+			{
+				return TRUE;
+			}
+		}
+		return FALSE;
+	};
+
+	csSecValue.Empty();
+	if (!pFile) return;
+	
+	if (SeekAttr(*pFile, csSecName))
+	{
+		CString csLine;
+		while (pFile->ReadString(csLine))
+		{
+			if (IsCommentLine(csLine) || IsBlankLine(csLine))
+			{
+				continue;
+			}
+			if (IsAttrLine(csLine))		// 直到读到下一个属性为止
+			{
+				break;
+			}
+			csSecValue += csLine;
+			csSecValue += _T("\r\n");
+		}
+	}
+}
+
+// 写某个字段的结果
+void sjx::WriteExIniSection(CStdioFile* pFile, CString csSecName, CString csSecValue)
+{
+	if (!pFile) return;
+
+	pFile->Seek(0, CFile::end);		// 到文件结尾
+	pFile->WriteString(_T("\n"));
+	CString csLine;
+	csLine = _T("[") + csSecName + _T("]\n");
+	pFile->WriteString(csLine);
+	pFile->WriteString(_T("\n"));
+	pFile->WriteString(csSecValue);
 }

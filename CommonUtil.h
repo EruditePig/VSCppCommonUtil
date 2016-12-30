@@ -8,6 +8,8 @@ namespace sjx
 	BOOL GenFileMD5(CString filepath, CString& md5);
 	// 比较两个文件的MD5值是否相同。返回值 0-相同，-1-file1生成MD5失败 -2-file2生成MD5失败 -3-MD5不同
 	int CompareFileByMD5(CString file1, CString file2);
+	// 检测MD5值的正确性
+	BOOL IsValidMD5(CString csMD5);
 	// 比较两个文件的时间。返回值 0-相同，-1-file1生成时间失败 -2-file2生成MD5失败 -3 -file1比file2早 -4 file1比file2晚
 	int CompareFileByModTime(CString file1, CString file2);
 	// 比较文件的修改时间和给定的时间。返回值 0-相同 -1-file生成时间失败 -2-file要早 -3-file要晚
@@ -63,6 +65,12 @@ namespace sjx
     BOOL ExecCmd(CString cmd, CString& csRet);
     // 分割CString
     void SplitCString(CString str, CString split, CStringArray& strGet);
+	// 打开文件，为读写扩展ini 0读1写
+	CStdioFile* OpenExIniFile(CString csPath, int readOrWrite);
+	// 读某个字段的结果
+	void ReadExIniSection(CStdioFile* pFile, CString csSecName, CString& csSecValue);
+	// 写某个字段的结果
+	void WriteExIniSection(CStdioFile* pFile, CString csSecName, CString csSecValue);
 }
 
 #pragma region 计算MD5用
