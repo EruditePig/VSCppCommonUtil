@@ -255,6 +255,11 @@ BOOL sjx::IsFileExist(CString csFilePath)
 	}
 }
 
+CString sjx::GetFileExt(CString csFilePathOrName)
+{
+	return csFilePathOrName.Right(csFilePathOrName.GetLength() - csFilePathOrName.ReverseFind('.') - 1);
+}
+
 BOOL sjx::SelFile(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
 	CStringArray& csaFilePaths,
 	LPCTSTR lpszDefExt/* = NULL*/,
@@ -281,13 +286,13 @@ BOOL sjx::SelFile(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSave
 }
 
 
-BOOL sjx::SelFolder(CString& csFolderPath, CString csTitle/* = _T("选择文件夹")*/, HWND hParent/* = NULL*/)
+BOOL sjx::SelFolder(CString& csFolderPath, CString InitialDir /*= _T("")*/, CString csTitle/* = _T("选择文件夹")*/, HWND hParent/* = NULL*/)
 {
 	if (IsOSVistaOrGreater())	//vista及以上版本	
 	{
 		CFolderPickerDialog PathDlg;
 		PathDlg.m_ofn.lpstrTitle = csTitle;							//标题
-		//PathDlg.m_ofn.lpstrInitialDir = DefaultPath;								//初始路径
+		PathDlg.m_ofn.lpstrInitialDir = InitialDir;								//初始路径
 		if (PathDlg.DoModal() == IDOK)
 		{
 			csFolderPath = PathDlg.GetPathName();
@@ -746,4 +751,52 @@ void sjx::WriteExIniSection(CStdioFile* pFile, CString csSecName, CString csSecV
 	pFile->WriteString(csLine);
 	pFile->WriteString(_T("\n"));
 	pFile->WriteString(csSecValue);
+}
+
+// 在记事本中显示字符串
+void sjx::ShowTextInNotepad(CString csText)
+{
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	CString csPath("Notepad.exe");
+
+	if (!CreateProcess(NULL, //for NT/2000/xp
+		(LPTSTR)(LPCTSTR)csPath,   // command line string
+		NULL,	// Process handle not inheritable
+		NULL,	// Thread handle not inheritable.
+		FALSE,  // Set handle inheritance to FALSE.
+		0,		// No creation flags.
+		NULL,	// Use parent's environment block.
+		NULL,	// Use parent's starting directory.
+		&si,	// startup information
+		&pi		// Pointer to PROCESS_INFORMATION structure.
+	))
+	{
+		DWORD dwERror = GetLastError();
+		TRACE(_T("ERROR launching Notepad\r\n"));
+	}
+
+	WaitForSingleObject(pi.hThread, WAIT_TIMEOUT);
+	HWND hwnd = ::FindWindowEx(NULL, NULL, NULL, _T("无标题 - 记事本"));
+	if (hwnd)
+	{
+		HWND hwndEdit = ::FindWindowEx(hwnd, NULL, _T("edit"), NULL);
+		::SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)(LPTSTR)(LPCTSTR)csText);
+		::SendMessage(hwndEdit, EM_SETMODIFY, (WPARAM)TRUE, 0);
+	}
+
+}
+
+// 读取注册表某个字符串键值
+BOOL sjx::GetRegString(HKEY hKeyArg, CString keyNameArg, CString valNameArg, ULONG len, CString& csRegValue)
+{
+	CRegKey k;
+	k.Open(hKeyArg, keyNameArg);
+	BOOL bRet = (k.QueryStringValue(valNameArg, csRegValue.GetBufferSetLength(len), &len) == ERROR_SUCCESS);
+	csRegValue.ReleaseBuffer();
+	return bRet;
 }

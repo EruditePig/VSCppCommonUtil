@@ -32,6 +32,7 @@ namespace sjx
 	// 判断文件夹是否存在
 	BOOL IsFolderExist(CString csFolderPath);
 	BOOL IsFileExist(CString csFilePath);
+	CString GetFileExt(CString csFilePathOrName);
 	// 弹出对话框选择文件
 	BOOL SelFile(BOOL bOpenFileDialog, // TRUE for FileOpen, FALSE for FileSaveAs
 		CStringArray& csaFilePaths,
@@ -40,7 +41,7 @@ namespace sjx
 		DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 		LPCTSTR lpszFilter = NULL);
 	// 选择文件夹
-	BOOL SelFolder(CString& csFolderPath, CString csTitle = _T("选择文件夹"), HWND hParent = NULL);
+	BOOL SelFolder(CString& csFolderPath, CString InitialDir = _T(""), CString csTitle = _T("选择文件夹"), HWND hParent = NULL);
 	// 判断字符串是否在字符串数组中，否返回-1，是返回index（基于0）
 	int IsInCStringArray(CString cs, const CStringArray& csa);
 	// 将csaFrom中的字符串添加到csaTo数组中，bCheckDuplicate表示在添加的时候是否查重，如果已存在，则不添加
@@ -71,6 +72,10 @@ namespace sjx
 	void ReadExIniSection(CStdioFile* pFile, CString csSecName, CString& csSecValue);
 	// 写某个字段的结果
 	void WriteExIniSection(CStdioFile* pFile, CString csSecName, CString csSecValue);
+	// 在记事本中显示字符串
+	void ShowTextInNotepad(CString csText);
+	// 读取注册表某个字符串键值
+	BOOL GetRegString(HKEY hKeyArg, CString keyNameArg, CString valNameArg, ULONG len, CString& csRegValue);
 }
 
 #pragma region 计算MD5用
