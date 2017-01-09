@@ -76,6 +76,9 @@ namespace sjx
 	void ShowTextInNotepad(CString csText);
 	// 读取注册表某个字符串键值
 	BOOL GetRegString(HKEY hKeyArg, CString keyNameArg, CString valNameArg, ULONG len, CString& csRegValue);
+    // 获得某个目录下所有某个后缀的文件名,1Path 2 Filename
+    enum FILE_VALUE {FILEPATH, FILENAME};
+    void GetAllExtFiles(CString csPath, CString csExt, FILE_VALUE value, CStringArray& csaFiles);
 }
 
 #pragma region 计算MD5用

@@ -800,3 +800,34 @@ BOOL sjx::GetRegString(HKEY hKeyArg, CString keyNameArg, CString valNameArg, ULO
 	csRegValue.ReleaseBuffer();
 	return bRet;
 }
+
+// 获得某个目录下所有某个后缀的文件名
+void sjx::GetAllExtFiles(CString csPath, CString csExt, FILE_VALUE value, CStringArray& csaFiles)
+{
+    csaFiles.RemoveAll();
+
+    CString searchPath;
+    searchPath.Format(_T("%s*."), csPath);
+    searchPath += csExt;
+    CFileFind finder;
+    BOOL bRet = finder.FindFile(searchPath);
+    while (bRet)
+    {
+        bRet = finder.FindNextFile();
+        if (finder.IsDots() || finder.IsDirectory())
+        {
+            continue;
+        }
+        else
+        { 
+            if (value == FILEPATH)
+            {
+                csaFiles.Add(finder.GetFilePath());
+            }
+            else
+            {
+                csaFiles.Add(finder.GetFileName());
+            }
+        }
+    }
+}
